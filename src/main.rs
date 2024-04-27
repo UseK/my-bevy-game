@@ -1,14 +1,46 @@
 use bevy::{
     app::{App, Startup, Update},
+    asset::Assets,
+    core_pipeline::core_2d::Camera2dBundle,
     ecs::{
         component::Component,
         query::With,
         schedule::IntoSystemConfigs,
         system::{Commands, Query, Res, ResMut, Resource},
     },
+    math::primitives::Circle,
+    render::{color::Color, mesh::Mesh},
+    sprite::{ColorMaterial, MaterialMesh2dBundle, Mesh2dHandle},
     time::{Time, Timer, TimerMode},
+    transform::components::Transform,
+    utils::default,
     DefaultPlugins,
 };
+
+fn main() {
+    App::new()
+        .insert_resource(GreetTime(Timer::from_seconds(2.0, TimerMode::Repeating)))
+        .add_plugins(DefaultPlugins)
+        .add_systems(Startup, add_people)
+        .add_systems(Startup, add_circle)
+        .add_systems(Update, (update_people, greet_people).chain())
+        .run();
+}
+
+fn add_circle(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    commands.spawn(Camera2dBundle::default());
+    let circle_shape = Mesh2dHandle(meshes.add(Circle { radius: 50.0 }));
+    commands.spawn(MaterialMesh2dBundle {
+        mesh: circle_shape,
+        material: materials.add(Color::RED),
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        ..default()
+    });
+}
 
 #[derive(Resource)]
 struct GreetTime(Timer);
@@ -39,13 +71,4 @@ fn update_people(mut query: Query<&mut Name, With<Person>>) {
             name.0 = "aiee".to_string();
         }
     });
-}
-
-fn main() {
-    App::new()
-        .insert_resource(GreetTime(Timer::from_seconds(2.0, TimerMode::Repeating)))
-        .add_plugins(DefaultPlugins)
-        .add_systems(Startup, add_people)
-        .add_systems(Update, (update_people, greet_people).chain())
-        .run();
 }

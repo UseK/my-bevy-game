@@ -21,8 +21,9 @@ fn main() {
     App::new()
         .insert_resource(GreetTime(Timer::from_seconds(2.0, TimerMode::Repeating)))
         .add_plugins(DefaultPlugins)
-        .add_systems(Startup, add_people)
         .add_systems(Startup, add_circle)
+        .add_systems(Update, move_circle)
+        .add_systems(Startup, add_people)
         .add_systems(Update, (update_people, greet_people).chain())
         .run();
 }
@@ -34,12 +35,27 @@ fn add_circle(
 ) {
     commands.spawn(Camera2dBundle::default());
     let circle_shape = Mesh2dHandle(meshes.add(Circle { radius: 50.0 }));
-    commands.spawn(MaterialMesh2dBundle {
-        mesh: circle_shape,
-        material: materials.add(Color::RED),
-        transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        ..default()
-    });
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: circle_shape,
+            material: materials.add(Color::RED),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        },
+        Direction::Up,
+    ));
+}
+
+fn move_circle(mut query: Query<(&mut Direction, &mut Transform)>) {
+    for (mut d, mut t) in &mut query {
+        t.translation.x += 1.;
+    }
+}
+
+#[derive(Component)]
+enum Direction {
+    Up,
+    Down,
 }
 
 #[derive(Resource)]

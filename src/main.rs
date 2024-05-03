@@ -8,6 +8,7 @@ use bevy::{
         schedule::IntoSystemConfigs,
         system::{Commands, Query, Res, ResMut, Resource},
     },
+    input::{keyboard::KeyCode, ButtonInput},
     math::primitives::Circle,
     render::{color::Color, mesh::Mesh},
     sprite::{ColorMaterial, MaterialMesh2dBundle, Mesh2dHandle},
@@ -23,6 +24,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, add_circle)
         .add_systems(Update, move_circle)
+        .add_systems(Update, change_direction)
         .add_systems(Startup, add_people)
         .add_systems(Update, (update_people, greet_people).chain())
         .run();
@@ -46,13 +48,32 @@ fn add_circle(
     ));
 }
 
-fn move_circle(mut query: Query<(&mut Direction, &mut Transform)>) {
-    for (mut d, mut t) in &mut query {
-        t.translation.x += 1.;
+fn move_circle(mut query: Query<(&Direction, &mut Transform)>) {
+    for (d, mut t) in &mut query {
+        match d {
+            Direction::Up => t.translation.y += 1.,
+            Direction::Down => t.translation.y -= 1.,
+        }
     }
 }
 
-#[derive(Component)]
+fn change_direction(
+    mut query: Query<&mut Direction, With<Transform>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+) {
+    let mut change = |input: KeyCode, direction: Direction| {
+        if keyboard_input.just_pressed(input) {
+            for mut d in &mut query {
+                let d = d.as_mut();
+                *d = direction.clone();
+            }
+        }
+    };
+    change(KeyCode::KeyW, Direction::Up);
+    change(KeyCode::KeyS, Direction::Down);
+}
+
+#[derive(Component, Clone)]
 enum Direction {
     Up,
     Down,

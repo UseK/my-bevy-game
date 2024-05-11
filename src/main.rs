@@ -1,5 +1,6 @@
 use bevy::{
     prelude::*,
+    render::color,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
     text::Text2dBounds,
 };
@@ -9,32 +10,17 @@ fn main() {
         .insert_resource(GreetTime(Timer::from_seconds(2.0, TimerMode::Repeating)))
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, add_arrow_ui)
-        .add_systems(Startup, add_circle)
-        .add_systems(Update, move_circle)
-        .add_systems(Update, change_direction)
+        .add_systems(Update, change_ui_color)
+        .add_systems(Startup, add_ball)
+        .add_systems(Update, move_ball)
+        .add_systems(Update, change_ball_direction)
         .add_systems(Startup, add_people)
         .add_systems(Update, (update_people, greet_people).chain())
         .run();
 }
 
-fn add_circle(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    commands.spawn(Camera2dBundle::default());
-    let circle_shape = Mesh2dHandle(meshes.add(Circle { radius: 50.0 }));
-    commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: circle_shape,
-            material: materials.add(Color::GRAY),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
-            ..default()
-        },
-        Direction::Up,
-    ));
-}
-
+#[derive(Component)]
+struct ButtonUI;
 const BUTTON_SIZE: Vec2 = Vec2::new(40., 40.);
 
 fn add_arrow_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -48,7 +34,7 @@ fn add_arrow_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         font: &Handle<Font>,
     ) {
         commands
-            .spawn((button_sprite_bundle(x, y), direction))
+            .spawn((ButtonUI, button_sprite_bundle(x, y), direction))
             .with_children(|builder| {
                 builder.spawn(button_text_2d_bundle(text, font.clone()));
             });
@@ -109,7 +95,50 @@ fn add_arrow_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     );
 }
 
-fn move_circle(mut query: Query<(&Direction, &mut Transform)>) {
+fn change_ui_color(
+    mut query: Query<(&mut Sprite, &Direction), With<ButtonUI>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+) {
+    let change_color_only_when_pressed = |mut sprite: Mut<Sprite>, key: KeyCode| {
+        if keyboard_input.pressed(key) {
+            sprite.color = Color::GOLD
+        } else {
+            sprite.color = Color::GRAY
+        }
+    };
+    for (sprite, direction) in &mut query {
+        match direction {
+            Direction::Up => change_color_only_when_pressed(sprite, KeyCode::KeyW),
+            Direction::Down => change_color_only_when_pressed(sprite, KeyCode::KeyS),
+            Direction::Left => change_color_only_when_pressed(sprite, KeyCode::KeyA),
+            Direction::Right => change_color_only_when_pressed(sprite, KeyCode::KeyD),
+        }
+    }
+}
+
+#[derive(Component)]
+struct Ball;
+
+fn add_ball(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    commands.spawn(Camera2dBundle::default());
+    let circle_shape = Mesh2dHandle(meshes.add(Circle { radius: 50.0 }));
+    commands.spawn((
+        Ball,
+        MaterialMesh2dBundle {
+            mesh: circle_shape,
+            material: materials.add(Color::GRAY),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        },
+        Direction::Up,
+    ));
+}
+
+fn move_ball(mut query: Query<(&Direction, &mut Transform), With<Ball>>) {
     for (d, mut t) in &mut query {
         match d {
             Direction::Up => t.translation.y += 1.,
@@ -120,8 +149,8 @@ fn move_circle(mut query: Query<(&Direction, &mut Transform)>) {
     }
 }
 
-fn change_direction(
-    mut query: Query<&mut Direction, With<Transform>>,
+fn change_ball_direction(
+    mut query: Query<&mut Direction, With<Ball>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     let mut change = |input: KeyCode, direction: Direction| {

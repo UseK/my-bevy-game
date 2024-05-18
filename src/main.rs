@@ -1,6 +1,5 @@
 use bevy::{
     prelude::*,
-    render::color,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
     text::Text2dBounds,
 };
@@ -19,8 +18,6 @@ fn main() {
         .run();
 }
 
-#[derive(Component)]
-struct ButtonUI;
 const BUTTON_SIZE: Vec2 = Vec2::new(40., 40.);
 
 fn add_arrow_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -34,7 +31,7 @@ fn add_arrow_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         font: &Handle<Font>,
     ) {
         commands
-            .spawn((ButtonUI, button_sprite_bundle(x, y), direction))
+            .spawn((Button, button_sprite_bundle(x, y), direction))
             .with_children(|builder| {
                 builder.spawn(button_text_2d_bundle(text, font.clone()));
             });
@@ -96,7 +93,7 @@ fn add_arrow_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn change_ui_color(
-    mut query: Query<(&mut Sprite, &Direction), With<ButtonUI>>,
+    mut query: Query<(&mut Sprite, &Direction), With<Button>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     let change_color_only_when_pressed = |mut sprite: Mut<Sprite>, key: KeyCode| {

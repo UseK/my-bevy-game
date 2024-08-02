@@ -1,4 +1,5 @@
 use bevy::{
+    color::palettes::css,
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
     text::Text2dBounds,
@@ -40,7 +41,7 @@ fn add_arrow_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         let box_position = Vec2::new(450. + x, -250. + y);
         SpriteBundle {
             sprite: Sprite {
-                color: Color::GRAY,
+                color: Color::Srgba(css::GRAY),
                 custom_size: Some(BUTTON_SIZE),
                 ..default()
             },
@@ -98,9 +99,9 @@ fn change_ui_color(
 ) {
     let change_color_only_when_pressed = |mut sprite: Mut<Sprite>, key: KeyCode| {
         if keyboard_input.pressed(key) {
-            sprite.color = Color::GOLD
+            sprite.color = Color::Srgba(css::GOLD)
         } else {
-            sprite.color = Color::GRAY
+            sprite.color = Color::Srgba(css::GRAY)
         }
     };
     for (sprite, direction) in &mut query {
@@ -127,7 +128,7 @@ fn add_ball(
         Ball,
         MaterialMesh2dBundle {
             mesh: circle_shape,
-            material: materials.add(Color::GRAY),
+            material: materials.add(Color::Srgba(css::GRAY)),
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..default()
         },

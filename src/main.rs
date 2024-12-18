@@ -123,7 +123,7 @@ fn add_ball(
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     commands.spawn(Camera2dBundle::default());
-    let circle_shape = Mesh2dHandle(meshes.add(Circle { radius: 50.0 }));
+    let circle_shape = Mesh2dHandle(meshes.add(RegularPolygon { circumcircle: Circle { radius: 50.0 }, sides: 6 }));
     commands.spawn((
         Ball,
         MaterialMesh2dBundle {

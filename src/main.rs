@@ -1,9 +1,4 @@
-use bevy::{
-    color::palettes::css,
-    prelude::*,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
-    text::Text2dBounds,
-};
+use bevy::prelude::*;
 
 fn main() {
     App::new()
@@ -23,93 +18,59 @@ const BUTTON_SIZE: Vec2 = Vec2::new(40., 40.);
 
 fn add_arrow_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font: Handle<Font> = asset_server.load("fonts/FiraSans-Bold.ttf");
-    fn spawn_button(
-        commands: &mut Commands,
-        x: f32,
-        y: f32,
-        text: &str,
-        direction: Direction,
-        font: &Handle<Font>,
-    ) {
-        commands
-            .spawn((Button, button_sprite_bundle(x, y), direction))
-            .with_children(|builder| {
-                builder.spawn(button_text_2d_bundle(text, font.clone()));
-            });
-    }
-    fn button_sprite_bundle(x: f32, y: f32) -> SpriteBundle {
+    
+    let spawn_button = |commands: &mut Commands, x: f32, y: f32, label: &str, direction: Direction| {
         let box_position = Vec2::new(450. + x, -250. + y);
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::Srgba(css::GRAY),
-                custom_size: Some(BUTTON_SIZE),
-                ..default()
-            },
-            transform: Transform::from_translation(box_position.extend(0.)),
-            ..default()
-        }
-    }
-    fn button_text_2d_bundle(text: &str, font: Handle<Font>) -> Text2dBundle {
-        let text_style = TextStyle {
-            font: font.clone(),
-            font_size: 60.0,
-            ..default()
-        };
-        Text2dBundle {
-            text: Text {
-                sections: vec![TextSection::new(text, text_style.clone())],
-                justify: JustifyText::Center,
-                ..default()
-            },
-            text_2d_bounds: Text2dBounds { size: BUTTON_SIZE },
-            transform: Transform::from_translation(Vec3::Z),
-            ..default()
-        }
-    }
-    spawn_button(&mut commands, 0., 0., "S", Direction::Down, &font);
-    spawn_button(
-        &mut commands,
-        0.,
-        BUTTON_SIZE.y * 1.1,
-        "W",
-        Direction::Up,
-        &font,
-    );
-    spawn_button(
-        &mut commands,
-        -BUTTON_SIZE.x * 1.1,
-        0.,
-        "A",
-        Direction::Left,
-        &font,
-    );
-    spawn_button(
-        &mut commands,
-        BUTTON_SIZE.x * 1.1,
-        0.,
-        "D",
-        Direction::Right,
-        &font,
-    );
+        
+        commands
+            .spawn((
+                Button,
+                direction,
+                Sprite {
+                    color: Color::srgb(0.5, 0.5, 0.5), // Gray
+                    custom_size: Some(BUTTON_SIZE),
+                    ..default()
+                },
+                Transform::from_translation(box_position.extend(0.)),
+                GlobalTransform::default(),
+            ))
+            .with_children(|builder| {
+                // Add text as child
+                builder.spawn((
+                    Text2d::new(label),
+                    TextFont {
+                        font: font.clone(),
+                        font_size: 60.0,
+                        ..default()
+                    },
+                    TextColor(Color::BLACK),
+                    Transform::from_translation(Vec3::Z),
+                ));
+            });
+    };
+
+    spawn_button(&mut commands, 0., 0., "S", Direction::Down);
+    spawn_button(&mut commands, 0., BUTTON_SIZE.y * 1.1, "W", Direction::Up);
+    spawn_button(&mut commands, -BUTTON_SIZE.x * 1.1, 0., "A", Direction::Left);
+    spawn_button(&mut commands, BUTTON_SIZE.x * 1.1, 0., "D", Direction::Right);
 }
 
 fn change_ui_color(
     mut query: Query<(&mut Sprite, &Direction), With<Button>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    let change_color_only_when_pressed = |mut sprite: Mut<Sprite>, key: KeyCode| {
+    for (mut sprite, direction) in &mut query {
+        let key = match direction {
+            Direction::Up => KeyCode::KeyW,
+            Direction::Down => KeyCode::KeyS,
+            Direction::Left => KeyCode::KeyA,
+            Direction::Right => KeyCode::KeyD,
+        };
+        
         if keyboard_input.pressed(key) {
-            sprite.color = Color::Srgba(css::GOLD)
+            sprite.color = Color::srgb(1.0, 0.843, 0.0); // Gold
         } else {
-            sprite.color = Color::Srgba(css::GRAY)
-        }
-    };
-    for (sprite, direction) in &mut query {
-        match direction {
-            Direction::Up => change_color_only_when_pressed(sprite, KeyCode::KeyW),
-            Direction::Down => change_color_only_when_pressed(sprite, KeyCode::KeyS),
-            Direction::Left => change_color_only_when_pressed(sprite, KeyCode::KeyA),
-            Direction::Right => change_color_only_when_pressed(sprite, KeyCode::KeyD),
+            sprite.color = Color::srgb(0.5, 0.5, 0.5); // Gray
         }
     }
 }
@@ -117,21 +78,20 @@ fn change_ui_color(
 #[derive(Component)]
 struct Ball;
 
-fn add_ball(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    commands.spawn(Camera2dBundle::default());
-    let circle_shape = Mesh2dHandle(meshes.add(RegularPolygon { circumcircle: Circle { radius: 50.0 }, sides: 6 }));
+fn add_ball(mut commands: Commands) {
+    // Spawn camera
+    commands.spawn(Camera2d::default());
+    
+    // Spawn ball as simple sprite
     commands.spawn((
         Ball,
-        MaterialMesh2dBundle {
-            mesh: circle_shape,
-            material: materials.add(Color::Srgba(css::GRAY)),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        Sprite {
+            color: Color::srgb(0.5, 0.5, 0.5), // Gray
+            custom_size: Some(Vec2::splat(100.0)),
             ..default()
         },
+        Transform::from_xyz(0.0, 0.0, 0.0),
+        GlobalTransform::default(),
         Direction::Up,
     ));
 }

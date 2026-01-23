@@ -78,18 +78,19 @@ fn change_ui_color(
 #[derive(Component)]
 struct Ball;
 
-fn add_ball(mut commands: Commands) {
+fn add_ball(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<ColorMaterial>>) {
     // Spawn camera
     commands.spawn(Camera2d::default());
     
-    // Spawn ball as simple sprite
+    // Create hexagon mesh
+    let hexagon = meshes.add(Mesh::from(RegularPolygon::new(50.0, 6)));
+    let material = materials.add(Color::srgb(0.5, 0.5, 0.5)); // Gray
+    
+    // Spawn ball as hexagon
     commands.spawn((
         Ball,
-        Sprite {
-            color: Color::srgb(0.5, 0.5, 0.5), // Gray
-            custom_size: Some(Vec2::splat(100.0)),
-            ..default()
-        },
+        Mesh2d(hexagon),
+        MeshMaterial2d(material),
         Transform::from_xyz(0.0, 0.0, 0.0),
         GlobalTransform::default(),
         Direction::Up,

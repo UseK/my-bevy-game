@@ -18,41 +18,54 @@ const BUTTON_SIZE: Vec2 = Vec2::new(40., 40.);
 
 fn add_arrow_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font: Handle<Font> = asset_server.load("fonts/FiraSans-Bold.ttf");
-    
-    let spawn_button = |commands: &mut Commands, x: f32, y: f32, label: &str, direction: Direction| {
-        let box_position = Vec2::new(450. + x, -250. + y);
-        
-        commands
-            .spawn((
-                Button,
-                direction,
-                Sprite {
-                    color: Color::srgb(0.5, 0.5, 0.5), // Gray
-                    custom_size: Some(BUTTON_SIZE),
-                    ..default()
-                },
-                Transform::from_translation(box_position.extend(0.)),
-                GlobalTransform::default(),
-            ))
-            .with_children(|builder| {
-                // Add text as child
-                builder.spawn((
-                    Text2d::new(label),
-                    TextFont {
-                        font: font.clone(),
-                        font_size: 60.0,
+
+    let spawn_button =
+        |commands: &mut Commands, x: f32, y: f32, label: &str, direction: Direction| {
+            let box_position = Vec2::new(450. + x, -250. + y);
+
+            commands
+                .spawn((
+                    Button,
+                    direction,
+                    Sprite {
+                        color: Color::srgb(0.5, 0.5, 0.5), // Gray
+                        custom_size: Some(BUTTON_SIZE),
                         ..default()
                     },
-                    TextColor(Color::WHITE),
-                    Transform::from_translation(Vec3::Z),
-                ));
-            });
-    };
+                    Transform::from_translation(box_position.extend(0.)),
+                    GlobalTransform::default(),
+                ))
+                .with_children(|builder| {
+                    // Add text as child
+                    builder.spawn((
+                        Text2d::new(label),
+                        TextFont {
+                            font: font.clone(),
+                            font_size: 60.0,
+                            ..default()
+                        },
+                        TextColor(Color::WHITE),
+                        Transform::from_translation(Vec3::Z),
+                    ));
+                });
+        };
 
     spawn_button(&mut commands, 0., 0., "S", Direction::Down);
     spawn_button(&mut commands, 0., BUTTON_SIZE.y * 1.1, "W", Direction::Up);
-    spawn_button(&mut commands, -BUTTON_SIZE.x * 1.1, 0., "A", Direction::Left);
-    spawn_button(&mut commands, BUTTON_SIZE.x * 1.1, 0., "D", Direction::Right);
+    spawn_button(
+        &mut commands,
+        -BUTTON_SIZE.x * 1.1,
+        0.,
+        "A",
+        Direction::Left,
+    );
+    spawn_button(
+        &mut commands,
+        BUTTON_SIZE.x * 1.1,
+        0.,
+        "D",
+        Direction::Right,
+    );
 }
 
 fn change_ui_color(
@@ -66,7 +79,7 @@ fn change_ui_color(
             Direction::Left => KeyCode::KeyA,
             Direction::Right => KeyCode::KeyD,
         };
-        
+
         if keyboard_input.pressed(key) {
             sprite.color = Color::srgb(1.0, 0.843, 0.0); // Gold
         } else {
@@ -78,14 +91,18 @@ fn change_ui_color(
 #[derive(Component)]
 struct Ball;
 
-fn add_ball(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<ColorMaterial>>) {
+fn add_ball(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
     // Spawn camera
     commands.spawn(Camera2d::default());
-    
+
     // Create hexagon mesh
     let hexagon = meshes.add(Mesh::from(RegularPolygon::new(50.0, 6)));
     let material = materials.add(Color::srgb(0.5, 0.5, 0.5)); // Gray
-    
+
     // Spawn ball as hexagon
     commands.spawn((
         Ball,

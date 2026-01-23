@@ -43,7 +43,7 @@ fn add_arrow_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                         font_size: 60.0,
                         ..default()
                     },
-                    TextColor(Color::BLACK),
+                    TextColor(Color::WHITE),
                     Transform::from_translation(Vec3::Z),
                 ));
             });
